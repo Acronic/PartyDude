@@ -35,14 +35,14 @@ using Zeta.Internals.SNO;
 	and use the leader's banner in order to rejoin the party	
 	
 	Plugins that have been of use in the creation of this plugin:
-	- MyBuddy.Local aka Follow me Author: xsol
-	- GilesCombatReplacer Author: GilesSmith
-	- JoinMe! Author readonlyp	
+	- MyBuddy.Local aka Follow me - Author: xsol
+	- GilesCombatReplacer - Author: GilesSmith
+	- JoinMe! - Author readonlyp	
 	
 	Author: ChuckyEgg (CIGGARC Developer)
 	Support: CIGGARC team, et al
-	Date: 25th of October, 2012
-	Verion: 1.0.8
+	Date: 29th of October, 2012
+	Verion: 1.0.9
 	
  */
 namespace PartyDudePro
@@ -86,6 +86,10 @@ namespace PartyDudePro
 		
 		// Boss encounter
 		private bool BossEncounter = false;
+		
+		// these store information of the leader's location
+		private int leaderWorldID = 0;
+		private int leaderLevelAreaID = 0;
 
 		// Config window variables/identifiers/objects
 		// -------------------------------------------
@@ -131,7 +135,7 @@ namespace PartyDudePro
 
         public Version Version
         {
-            get { return new Version(1, 0, 8); }
+            get { return new Version(1, 0, 9); }
         }
 
         /// <summary> Executes the shutdown action. This is called when the bot is shutting down. (Not when Stop() is called) </summary>
@@ -141,6 +145,7 @@ namespace PartyDudePro
 		
         public void OnEnabled()
         {
+			Initialise_All();
 			// load settings from the config file
 			LoadConfigurationFile();
 			//create GameChanged instance
@@ -218,7 +223,7 @@ namespace PartyDudePro
 						while (!inBossArea())
 						{
 							Log("We are transitioning to boss area");
-							pauseForABit(2, 3);
+							pauseForABit(3, 4);
 						}
 						Log("Time to kick some Boss butt!");
 					}
@@ -236,7 +241,7 @@ namespace PartyDudePro
 						while (!inBossArea())
 						{
 							Log("We are transitioning to boss area");
-							pauseForABit(2, 3);
+							pauseForABit(3, 4);
 						}
 						Log("Time to kick some Boss butt!");
 					}
@@ -362,7 +367,10 @@ namespace PartyDudePro
 				if (!isStashing())
 				{
 					// grab coordinates of leader from PathCoordinates file
-					string[] leaderPathCoords = dudeRadio.getPathCoordinates();
+					string[] leaderLocationDetails = dudeRadio.getPathCoordinates();
+					leaderWorldID = Convert.ToInt32(leaderLocationDetails[0]);
+					leaderLevelAreaID = Convert.ToInt32(leaderLocationDetails[1]);
+					string[] leaderPathCoords = leaderLocationDetails[2].Split('#');
 					// store leaderPathCoords as a Vector3 
 					leaderLastPosition = new Vector3(float.Parse(leaderPathCoords[0]), float.Parse(leaderPathCoords[1]), float.Parse(leaderPathCoords[2]));
 						
@@ -483,6 +491,7 @@ namespace PartyDudePro
         {
 			switch (ZetaDia.CurrentWorldId)
 			{
+				case 60713: //  Lerori's Passage
 				case 73261: //  Skeleton King
 				case 182976: // Spider Queen Aranea
 				case 78839: //  The Butcher
@@ -493,8 +502,10 @@ namespace PartyDudePro
 				case 226713: // The Seigebreaker Assault Beast
 				case 119650: // Cydaea
 				case 121214: // Azmodan
-				case 103910: // Rakanoth
+				case 166640: // Rakanoth
+				case 103910: // Crystal Colonnade - non TP area
 				case 214956: // Izual The Betrayer
+				case 205399: // Pinnacle of Heaven
 				case 109561: // Diablo
 				case 153670: // Shadow Realm
 					return true;
@@ -514,10 +525,11 @@ namespace PartyDudePro
         {
 			// only check this is we are not in a Boss area
 			// checks that both the follower and the leader are not in the boss area
+			// make sure the leader is not too far away, or in a different world, or that the follower is not dead
 			currentGameState = dudeRadio.getGameState();
-			if (!BossEncounter && currentGameState != "BossEncounter")
+			if (!BossEncounter && currentGameState != "BossEncounter" && !ZetaDia.Me.IsDead) // need to add && NOT DEAD
 			{
-				if (ZetaDia.Me.Position.Distance(leaderLastPosition) > 150)
+				if (ZetaDia.Me.Position.Distance(leaderLastPosition) > 150 || ZetaDia.CurrentWorldId != leaderWorldID)
 				{
 					return true;
 				}
@@ -603,8 +615,11 @@ namespace PartyDudePro
 			when DB is first run
 		 */
         private void Initialise_All()
-        {
+        {		
 			// initialisation of variables goes here
+			
+			// Boss encounter
+			BossEncounter = false;
         } // END OF Initialise_All()
 		
 		/*

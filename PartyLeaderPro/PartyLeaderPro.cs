@@ -41,14 +41,14 @@ using Zeta.Internals.SNO;
 	3) Path and folder name of the COMMS system (database)
 	
 	Plugins that have been of use in the creation of this plugin:
-	- MyBuddy.Local aka Follow me Author: xsol
-	- GilesCombatReplacer Author: GilesSmith
-	- JoinMe! Author readonlyp	
+	- MyBuddy.Local aka Follow me - Author: xsol
+	- GilesCombatReplacer - Author: GilesSmith
+	- JoinMe! - Author readonlyp		
 	
 	Author: ChuckyEgg (CIGGARC Developer)
 	Support: CIGGARC team, et al
-	Date: 25th of October, 2012
-	Verion: 1.0.8
+	Date: 29th of October, 2012
+	Verion: 1.0.9
 	
  */
 namespace PartyLeaderPro
@@ -159,7 +159,7 @@ namespace PartyLeaderPro
 
         public Version Version
         {
-            get { return new Version(1, 0, 8); }
+            get { return new Version(1, 0, 9); }
         }
 
         /// <summary> Executes the shutdown action. This is called when the bot is shutting down. (Not when Stop() is called) </summary>
@@ -235,8 +235,9 @@ namespace PartyLeaderPro
 					{
 						// leave game to create a new one
 						Log("PROBLEM! Tried to start a new game, but the database is missing. We are now leaving and will recreate the game and party!");
-			//			ZetaDia.Service.Games.LeaveGame();
-						pauseForABit(3, 6);	
+						pauseForABit(3, 6);
+						ZetaDia.Service.Games.LeaveGame();
+						pauseForABit(2, 3);
 					}
 					else
 					{
@@ -269,11 +270,12 @@ namespace PartyLeaderPro
 					
 							// write coordinates to the PathCoordinates file after a certain amount of time (3 seconds)
 							// ========================================================================================
+							// we will actuall pass the world ID, Current Level Area ID, and the cooridinates of the leader to the followers
 							if (DateTime.Now.Subtract(LastPostionCheck).TotalMilliseconds > 1000)
 							{
 								LastPostionCheck = DateTime.Now;
 								// update coordinates
-								leaderRadio.updatePathCoordinates(ZetaDia.Me.Position);
+								leaderRadio.updatePathCoordinates(ZetaDia.CurrentWorldId.ToString(), ZetaDia.CurrentLevelAreaId.ToString(), ZetaDia.Me.Position);
 							}
 					
 							// Check if anyone is missing from the party
@@ -415,7 +417,7 @@ namespace PartyLeaderPro
 						while (!inBossArea())
 						{
 							Log("We are transitioning to boss area");
-							pauseForABit(2, 3);
+							pauseForABit(3, 4);
 						}
 						Log("Time to kick some Boss butt!");
 					}
@@ -435,7 +437,7 @@ namespace PartyLeaderPro
 						while (!inBossArea())
 						{
 							Log("We are transitioning to boss area");
-							pauseForABit(2, 3);
+							pauseForABit(3, 4);
 						}
 						Log("Time to kick some Boss butt!");
 					}
@@ -486,6 +488,7 @@ namespace PartyLeaderPro
 			// Reload profile
 			Zeta.CommonBot.ProfileManager.Load(GlobalSettings.Instance.LastProfile);				
 			pauseForABit(1, 2);
+			Initialise_All();
 		}		
 		
 		/*
@@ -664,6 +667,7 @@ namespace PartyLeaderPro
         {
 			switch (ZetaDia.CurrentWorldId)
 			{
+				case 60713: //  Lerori's Passage
 				case 73261: //  Skeleton King
 				case 182976: // Spider Queen Aranea
 				case 78839: //  The Butcher
@@ -674,8 +678,10 @@ namespace PartyLeaderPro
 				case 226713: // The Seigebreaker Assault Beast
 				case 119650: // Cydaea
 				case 121214: // Azmodan
-				case 103910: // Rakanoth
+				case 166640: // Rakanoth
+				case 103910: // Crystal Colonnade
 				case 214956: // Izual The Betrayer
+				case 205399: // Pinnacle of Heaven
 				case 109561: // Diablo
 				case 153670: // Shadow Realm
 					return true;
@@ -723,6 +729,9 @@ namespace PartyLeaderPro
             // set the game creation monitor to the current time
             // we will need to check 10 minutes from now, how many games were created
             gameCreationMonitorStartTime = DateTime.Now;
+		
+			// Boss encounter
+			BossEncounter = false;
 			
             Log("Initialsiation completed!");
         } // END OF Initialise_All()

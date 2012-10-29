@@ -32,8 +32,8 @@ using Zeta.Internals.Service;
 	
 	Author: ChuckyEgg (CIGGARC Developer)
 	Support: CIGGARC team, et al
-	Date: 25th of October, 2012
-	Verion: 1.0.8
+	Date: 29th of October, 2012
+	Verion: 1.0.9
 	
  */
  
@@ -523,7 +523,7 @@ namespace PartyDudePro
 		 */
 		public string[] getPathCoordinates()
 		{
-			string[] currentCoordinates;
+			string[] currentLocationDetails;
 			// I NEED TO CREATE A DEFAULT VALUE FOR THIS
 			// does file exist?
 			try
@@ -537,12 +537,12 @@ namespace PartyDudePro
 						FileStream fs = File.Open(pathCoordinates, FileMode.Open, FileAccess.Read, FileShare.Read);
 						using (StreamReader pathCoordinatesReader = new StreamReader(fs))
 						{
-							currentCoordinates = pathCoordinatesReader.ReadLine().Split('#');
+							currentLocationDetails = pathCoordinatesReader.ReadLine().Split('=');
 						}
 						fs.Close();
 						// store this, just-in-case the next value cannot be retrieved
-						lastSuccessfullyReadCoords = currentCoordinates;
-						return currentCoordinates;
+						lastSuccessfullyReadCoords = currentLocationDetails;
+						return currentLocationDetails;
 					}
 					catch
 					{
