@@ -41,8 +41,8 @@ using Zeta.Internals.SNO;
 	
 	Author: ChuckyEgg (CIGGARC Developer)
 	Support: CIGGARC team, et al
-	Date: 29th of October, 2012
-	Verion: 1.0.9
+	Date: 1st of November, 2012
+	Verion: 1.0.10
 	
  */
 namespace PartyDudePro
@@ -135,7 +135,7 @@ namespace PartyDudePro
 
         public Version Version
         {
-            get { return new Version(1, 0, 9); }
+            get { return new Version(1, 0, 10); }
         }
 
         /// <summary> Executes the shutdown action. This is called when the bot is shutting down. (Not when Stop() is called) </summary>
@@ -145,6 +145,9 @@ namespace PartyDudePro
 		
         public void OnEnabled()
         {
+			// for when the bot is started or stopped
+			Zeta.CommonBot.BotMain.OnStart += BotStarted;
+			Zeta.CommonBot.BotMain.OnStop += BotStopped;
 			Initialise_All();
 			// load settings from the config file
 			LoadConfigurationFile();
@@ -155,7 +158,10 @@ namespace PartyDudePro
 
         /// <summary> Executes the disabled action. This is called when he user has disabled this specific plugin via the GUI. </summary>
         public void OnDisabled()
-        {				
+        {		
+			// for when the bot is started or stopped
+			Zeta.CommonBot.BotMain.OnStart -= BotStarted;
+			Zeta.CommonBot.BotMain.OnStop -= BotStopped;		
             Zeta.CommonBot.GameEvents.OnGameChanged -= GameChanged;
             Log("Plugin disabled!");
         }
@@ -202,7 +208,7 @@ namespace PartyDudePro
 					
 					// grab Dude's current state
 					// PartyID will be = Dude1, Dude2, or Dude3
-					string currentDudeState = dudeRadio.getDudeState();
+			//		string currentDudeState = dudeRadio.getDudeState();
 					// ready for when we add code that requires the Dude's state
 				}	
 			
@@ -268,6 +274,27 @@ namespace PartyDudePro
 			
 			
         } // END OF OnPulse()
+		
+		/*
+			This method represent the BotMain event OnStart (Zeta.CommonBot.BotMain.OnStart)
+			We need for the party formation to start again
+		 */
+        public void BotStarted(Zeta.CommonBot.IBot bot)
+		{						
+			// Reload profile
+			Zeta.CommonBot.ProfileManager.Load(GlobalSettings.Instance.LastProfile);				
+			pauseForABit(1, 2);
+			Initialise_All();
+		}		
+		
+		/*
+			This method represent the BotMain event OnStop (Zeta.CommonBot.BotMain.OnStop)
+			We need for the comms database to be removed, because on the next 
+		 */
+        public void BotStopped(Zeta.CommonBot.IBot bot)
+		{			
+			// Do nothing for now
+		}
 		
 		/*
 			this mothod looks for and invite to a party, accepts it, and 
@@ -491,11 +518,13 @@ namespace PartyDudePro
         {
 			switch (ZetaDia.CurrentWorldId)
 			{
+				case 174449: // Cain's House
 				case 60713: //  Lerori's Passage
 				case 73261: //  Skeleton King
 				case 182976: // Spider Queen Aranea
 				case 78839: //  The Butcher
 				case 195200: // Maghda
+				case 81715: //  Visit the prince
 				case 60193: //  Zoltun Kulle
 				case 60756: //  Belial
 				case 103209: // Ghom 
